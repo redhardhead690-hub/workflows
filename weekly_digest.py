@@ -64,7 +64,7 @@ SCHOOLS = {
     ],
 }
 
-RECIPIENT     = "yossi.tali@gmail.com"   # where the digest is sent
+RECIPIENT     = "Efrat@implement.org.il" # where the digest is sent
 DAYS_BACK     = 7                        # look-back window; keep equal to how
                                          # often the job runs (see README)
 MAX_PER_FEED  = 8                        # cap articles per journal
