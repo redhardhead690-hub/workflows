@@ -49,7 +49,7 @@ CLAUDE_MODEL  = "claude-opus-4-8"        # -> "claude-haiku-4-5" or
 # ---------------------------------------------------------------------------
 
 ANTHROPIC_API_KEY  = os.environ["ANTHROPIC_API_KEY"].strip()
-GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"].strip() # the sending Gmail
+GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"].strip()           # sending Gmail
 GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"].replace(" ", "").strip()  # 16-char app password
 
 
