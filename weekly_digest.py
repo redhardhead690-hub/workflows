@@ -119,31 +119,34 @@ def build_prompt(by_journal: dict):
     """Group articles by school, then build a prompt. Returns (prompt, has_content)."""
     header = (
         "You are preparing an email digest of recent peer-reviewed articles "
-        "from top academic management journals, for a reader who works in "
-        "organizational consulting and leadership development.\n\n"
+        "from top academic management journals, for a Hebrew-speaking reader "
+        "who works in organizational consulting and leadership development.\n\n"
+        "CRITICAL: Write the ENTIRE digest in high-register Hebrew (עברית "
+        "תקנית גבוהה). All summaries, all labels, all notes — everything "
+        "must be in Hebrew. The only exceptions are: article titles (keep in "
+        "the original English and make them clickable links), journal names "
+        "(keep in English in parentheses), and the school headings (keep "
+        "both Hebrew and English as given below). Use right-to-left direction "
+        "by wrapping the body in <div dir=\"rtl\">.\n\n"
         "The articles below are already grouped into six academic 'schools' "
         "(אסכולות). KEEP THIS GROUPING in your output — use the school name "
-        "as an <h2> heading (keep both the Hebrew and English). Under each "
-        "school, list the articles. For each article give:\n"
-        "- The journal name in parentheses after the title\n"
-        "- <strong>Research question:</strong> What question did the study ask? "
-        "(one sentence)\n"
-        "- <strong>Method & sample:</strong> How was it studied? Include the "
-        "research method (survey, experiment, field study, meta-analysis, "
-        "qualitative, longitudinal, etc.), the type of participants or "
-        "organizations (e.g. Fortune 500 firms, hospital teams, MBA students), "
-        "the industry or sector if mentioned, and sample size if available. "
-        "(1-2 sentences)\n"
-        "- <strong>Key findings:</strong> What did they find? Summarize the "
-        "main conclusions in plain language. (2-3 sentences)\n"
-        "- <em>Why it matters for practice:</em> A short note on how a "
-        "consultant or manager could use this. (1 sentence)\n\n"
-        "Write everything in your own words — do not copy the abstract. "
-        "Skip schools that have no new articles this period. Finish with a "
-        "single-line 'Theme of the period' if you notice a common thread "
-        "across schools.\n\n"
-        "Return clean HTML using only <h2>, <h3>, <p>, <ul>, <li>, <em>, "
-        "<strong>, and <a> tags (no <html>/<body> wrapper). Make each "
+        "as an <h2> heading. Under each school, list the articles. For each "
+        "article give:\n"
+        "- שם כתב העת בסוגריים אחרי הכותרת\n"
+        "- <strong>שאלת מחקר:</strong> מה השאלה שהמחקר שאל? (משפט אחד)\n"
+        "- <strong>שיטה ומדגם:</strong> כיצד נבדק? כללו את שיטת המחקר "
+        "(סקר, ניסוי, מחקר שדה, מטה-אנליזה, מחקר איכותני, אורכי וכו׳), "
+        "סוג המשתתפים או הארגונים, התעשייה או המגזר אם צוינו, וגודל "
+        "המדגם אם זמין. (1-2 משפטים)\n"
+        "- <strong>ממצאים מרכזיים:</strong> מה מצאו? סכמו את המסקנות "
+        "העיקריות בשפה פשוטה וברורה. (2-3 משפטים)\n"
+        "- <em>למה זה חשוב לפרקטיקה:</em> הערה קצרה כיצד יועץ ארגוני או "
+        "מנהל יכולים להשתמש בממצא הזה. (משפט אחד)\n\n"
+        "כתבו הכל במילים שלכם — אל תעתיקו מהתקציר. דלגו על אסכולות ללא "
+        "מאמרים חדשים. סיימו ב׳נושא התקופה׳ אם זיהיתם חוט מקשר בין "
+        "האסכולות.\n\n"
+        "Return clean HTML using only <div>, <h2>, <h3>, <p>, <ul>, <li>, "
+        "<em>, <strong>, and <a> tags (no <html>/<body> wrapper). Make each "
         "article title a link to its URL.\n\nArticles by school:\n"
     )
 
@@ -186,17 +189,17 @@ def summarize(prompt: str) -> str:
 def send_email(html_body: str) -> None:
     today = datetime.now().strftime("%b %d, %Y")
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Management Research Digest \u2014 {today}"
+    msg["Subject"] = f"סיכום מחקרי ניהול — {today}"
     msg["From"] = GMAIL_ADDRESS
     msg["To"] = RECIPIENT
 
-    full_html = f"""<html><body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;
-max-width:640px;margin:auto;color:#1a1a1a;line-height:1.5;">
-  <h1 style="font-size:20px;">Management Research Digest</h1>
+    full_html = f"""<html dir="rtl"><body style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+max-width:640px;margin:auto;color:#1a1a1a;line-height:1.7;direction:rtl;text-align:right;">
+  <h1 style="font-size:20px;">סיכום מחקרי ניהול</h1>
   {html_body}
   <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
-  <p style="font-size:12px;color:#888;">Generated automatically. Summaries by
-  Claude; tap any title to read the full article.</p>
+  <p style="font-size:12px;color:#888;">נוצר אוטומטית. הסיכומים נכתבו על ידי
+  Claude; לחצו על כותרת מאמר כדי לקרוא את המקור המלא.</p>
 </body></html>"""
 
     msg.attach(MIMEText(full_html, "html"))
