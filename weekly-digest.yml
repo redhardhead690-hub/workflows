@@ -1,0 +1,28 @@
+name: Management Research Digest
+
+on:
+  schedule:
+    # 07:00 UTC every Sunday (= 10:00 Israel time in summer, 09:00 in winter).
+    # Format is: minute hour day-of-month month day-of-week (0 = Sunday).
+    - cron: "0 7 * * 0"
+  workflow_dispatch:   # adds a "Run workflow" button for manual testing
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send digest
+        env:
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_ADDRESS:      ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python weekly_digest.py
