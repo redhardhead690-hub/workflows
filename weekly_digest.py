@@ -48,9 +48,9 @@ CLAUDE_MODEL  = "claude-opus-4-8"        # -> "claude-haiku-4-5" or
 # SECRETS — supplied as environment variables (see README)
 # ---------------------------------------------------------------------------
 
-ANTHROPIC_API_KEY  = os.environ["ANTHROPIC_API_KEY"]
-GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"]       # the sending Gmail
-GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]  # 16-char app password
+ANTHROPIC_API_KEY  = os.environ["ANTHROPIC_API_KEY"].strip()
+GMAIL_ADDRESS      = os.environ["GMAIL_ADDRESS"].strip() # the sending Gmail
+GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"].replace(" ", "").strip()]  # 16-char app password
 
 
 def _clean(html: str) -> str:
