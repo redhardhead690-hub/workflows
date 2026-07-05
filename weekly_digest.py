@@ -64,7 +64,7 @@ SCHOOLS = {
     ],
 }
 
-RECIPIENT     = "Efrat@implement.org.il" # where the digest is sent
+RECIPIENT     = "yossi.tali@gmail.com"   # where the digest is sent
 DAYS_BACK     = 7                        # look-back window; keep equal to how
                                          # often the job runs (see README)
 MAX_PER_FEED  = 8                        # cap articles per journal
@@ -117,37 +117,69 @@ def collect_articles() -> dict:
 
 def build_prompt(by_journal: dict):
     """Group articles by school, then build a prompt. Returns (prompt, has_content)."""
+    # Color palette for the six schools — used in the prompt so Claude
+    # wraps each school section in the matching color.
+    school_colors = {
+        "אסכולת התיאוריה (Theory)":                                  "#6C63FF",
+        "אסכולת המחקר האמפירי (Empirical Research)":                 "#2D9CDB",
+        "אסכולת הארגון כמערכת חברתית (Organization as Social System)": "#27AE60",
+        "אסכולת האסטרטגיה (Strategy)":                               "#E67E22",
+        "אסכולת הפסיכולוגיה הארגונית (Organizational Psychology)":   "#E74C3C",
+        "אסכולת המנהיגות (Leadership)":                              "#8E44AD",
+    }
+    color_instructions = "\n".join(
+        f"  - {name}: use color {color}" for name, color in school_colors.items()
+    )
+
     header = (
-        "You are preparing an email digest of recent peer-reviewed articles "
-        "from top academic management journals, for a Hebrew-speaking reader "
-        "who works in organizational consulting and leadership development.\n\n"
+        "You are preparing a beautifully designed HTML email digest of recent "
+        "peer-reviewed articles from top academic management journals, for a "
+        "Hebrew-speaking reader who works in organizational consulting and "
+        "leadership development.\n\n"
         "CRITICAL: Write the ENTIRE digest in high-register Hebrew (עברית "
         "תקנית גבוהה). All summaries, all labels, all notes — everything "
         "must be in Hebrew. The only exceptions are: article titles (keep in "
         "the original English and make them clickable links), journal names "
         "(keep in English in parentheses), and the school headings (keep "
-        "both Hebrew and English as given below). Use right-to-left direction "
-        "by wrapping the body in <div dir=\"rtl\">.\n\n"
-        "The articles below are already grouped into six academic 'schools' "
-        "(אסכולות). KEEP THIS GROUPING in your output — use the school name "
-        "as an <h2> heading. Under each school, list the articles. For each "
-        "article give:\n"
+        "both Hebrew and English as given below).\n\n"
+        "DESIGN INSTRUCTIONS — use inline CSS for everything (email clients "
+        "ignore <style> blocks):\n"
+        "- Each school section should have an <h2> with a colored left "
+        "border (4px solid) and matching colored text. The colors per school "
+        "are:\n"
+        f"{color_instructions}\n"
+        "- Each article should be wrapped in a card: a <div> with "
+        "background:#f8f9fa, border-radius:8px, padding:16px, "
+        "margin-bottom:12px, and a thin top border (3px solid) in the "
+        "school's color.\n"
+        "- Article titles should be <h3> with color:#1a1a1a and linked to "
+        "the URL. The journal name in parentheses should be in a <span> "
+        "with color:#666 and font-size:13px.\n"
+        "- Labels (שאלת מחקר, שיטה ומדגם, ממצאים מרכזיים) should be "
+        "<strong> with color:#333.\n"
+        "- The 'למה זה חשוב לפרקטיקה' note should be in an <em> block "
+        "with background:#e8f4fd, border-radius:6px, padding:8px 12px, "
+        "display:block, margin-top:8px, color:#1a5276, font-size:14px.\n"
+        "- Use a small decorative emoji before each label: 🔍 for שאלת "
+        "מחקר, 🧪 for שיטה ומדגם, 📊 for ממצאים מרכזיים, 💡 for למה זה "
+        "חשוב לפרקטיקה.\n\n"
+        "For each article give:\n"
         "- שם כתב העת בסוגריים אחרי הכותרת\n"
-        "- <strong>שאלת מחקר:</strong> מה השאלה שהמחקר שאל? (משפט אחד)\n"
-        "- <strong>שיטה ומדגם:</strong> כיצד נבדק? כללו את שיטת המחקר "
+        "- 🔍 <strong>שאלת מחקר:</strong> מה השאלה שהמחקר שאל? (משפט אחד)\n"
+        "- 🧪 <strong>שיטה ומדגם:</strong> כיצד נבדק? כללו את שיטת המחקר "
         "(סקר, ניסוי, מחקר שדה, מטה-אנליזה, מחקר איכותני, אורכי וכו׳), "
         "סוג המשתתפים או הארגונים, התעשייה או המגזר אם צוינו, וגודל "
         "המדגם אם זמין. (1-2 משפטים)\n"
-        "- <strong>ממצאים מרכזיים:</strong> מה מצאו? סכמו את המסקנות "
+        "- 📊 <strong>ממצאים מרכזיים:</strong> מה מצאו? סכמו את המסקנות "
         "העיקריות בשפה פשוטה וברורה. (2-3 משפטים)\n"
-        "- <em>למה זה חשוב לפרקטיקה:</em> הערה קצרה כיצד יועץ ארגוני או "
+        "- 💡 <em>למה זה חשוב לפרקטיקה:</em> הערה קצרה כיצד יועץ ארגוני או "
         "מנהל יכולים להשתמש בממצא הזה. (משפט אחד)\n\n"
         "כתבו הכל במילים שלכם — אל תעתיקו מהתקציר. דלגו על אסכולות ללא "
-        "מאמרים חדשים. סיימו ב׳נושא התקופה׳ אם זיהיתם חוט מקשר בין "
-        "האסכולות.\n\n"
-        "Return clean HTML using only <div>, <h2>, <h3>, <p>, <ul>, <li>, "
-        "<em>, <strong>, and <a> tags (no <html>/<body> wrapper). Make each "
-        "article title a link to its URL.\n\nArticles by school:\n"
+        "מאמרים חדשים. סיימו ב׳🎯 נושא התקופה׳ — תיבה מעוצבת עם "
+        "background:#fff3cd, border:1px solid #ffc107, border-radius:8px, "
+        "padding:16px, אם זיהיתם חוט מקשר בין האסכולות.\n\n"
+        "Return the HTML fragment only (no <html>/<body>/<head> wrapper). "
+        "Use ONLY inline styles, no CSS classes.\n\nArticles by school:\n"
     )
 
     lines, has_content = [header], False
@@ -193,13 +225,33 @@ def send_email(html_body: str) -> None:
     msg["From"] = GMAIL_ADDRESS
     msg["To"] = RECIPIENT
 
-    full_html = f"""<html dir="rtl"><body style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-max-width:640px;margin:auto;color:#1a1a1a;line-height:1.7;direction:rtl;text-align:right;">
-  <h1 style="font-size:20px;">סיכום מחקרי ניהול</h1>
-  {html_body}
-  <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
-  <p style="font-size:12px;color:#888;">נוצר אוטומטית. הסיכומים נכתבו על ידי
-  Claude; לחצו על כותרת מאמר כדי לקרוא את המקור המלא.</p>
+    full_html = f"""<html dir="rtl"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background-color:#f0f2f5;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;">
+<div style="max-width:660px;margin:0 auto;padding:20px;">
+
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+    border-radius:12px 12px 0 0;padding:32px 28px;text-align:center;">
+    <h1 style="color:#ffffff;font-size:24px;margin:0 0 6px 0;font-weight:700;">
+      📚 סיכום מחקרי ניהול
+    </h1>
+    <p style="color:#a8b2d1;font-size:14px;margin:0;">{today}</p>
+  </div>
+
+  <!-- Body -->
+  <div style="background:#ffffff;padding:28px;border-radius:0 0 12px 12px;
+    direction:rtl;text-align:right;line-height:1.7;color:#2c3e50;">
+    {html_body}
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;padding:20px;direction:rtl;">
+    <p style="font-size:12px;color:#95a5a6;margin:0;">
+      נוצר אוטומטית · הסיכומים נכתבו על ידי Claude · לחצו על כותרת מאמר לקריאת המקור המלא
+    </p>
+  </div>
+
+</div>
 </body></html>"""
 
     msg.attach(MIMEText(full_html, "html"))
@@ -212,8 +264,11 @@ def main() -> None:
     by_journal = collect_articles()
     prompt, has_content = build_prompt(by_journal)
     body = summarize(prompt) if has_content else (
-        f"<p>No new articles from your journals in the past {DAYS_BACK} days. "
-        "These journals publish slowly, so quiet periods are normal.</p>"
+        '<div style="background:#f8f9fa;border-radius:8px;padding:20px;text-align:center;">'
+        '<p style="font-size:16px;color:#666;">🔇 אין מאמרים חדשים מכתבי העת '
+        f'ב-{DAYS_BACK} הימים האחרונים.</p>'
+        '<p style="font-size:14px;color:#999;">כתבי עת אקדמיים מתפרסמים לאט — '
+        'זה תקין לגמרי.</p></div>'
     )
     send_email(body)
     print("Digest sent to", RECIPIENT)
